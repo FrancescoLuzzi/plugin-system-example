@@ -1,4 +1,5 @@
+use async_trait::async_trait;
+#[async_trait]
 pub trait SayHelloService {
-    fn say_hello(&self);
+    async fn say_hello(&self);
 }
-

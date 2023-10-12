@@ -2,10 +2,11 @@
 name = "my-master"
 version = "0.1.0"
 authors = ["luojia65 <me@luojia.cc>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-libloading = "0.5"
+libloading = "0"
 my-interface = { path = "../my-interface", version = "*" }
+tokio = { version= "1", features = ["rt","macros","rt-multi-thread"]}
