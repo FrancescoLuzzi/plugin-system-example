@@ -3,20 +3,20 @@ use my_interface::{SayHelloService, WithRuntime};
 use tokio::{self, runtime::Handle};
 
 #[no_mangle]
-pub fn new_service(handle: Handle) -> Box<dyn SayHelloService> {
-    Box::new(PluginSayHello::new(handle))
+pub fn new_service(get_handle: fn() -> Handle) -> Box<dyn SayHelloService> {
+    Box::new(PluginSayHello::new(get_handle))
 }
 
 pub struct PluginSayHello {
     id: String,
-    handle: Handle,
+    get_handle: fn() -> Handle,
 }
 
 impl PluginSayHello {
-    fn new(handle: Handle) -> PluginSayHello {
+    fn new(get_handle: fn() -> Handle) -> PluginSayHello {
         let id = format!("{:08x}", rand::random::<u32>());
         println!("[{}] Created instance!", id);
-        PluginSayHello { id, handle }
+        PluginSayHello { id, get_handle }
     }
 }
 
@@ -24,7 +24,7 @@ impl PluginSayHello {
 #[async_trait]
 impl SayHelloService for PluginSayHello {
     async fn say_hello(&self) {
-        WithRuntime::new(self.handle.clone(), async move {
+        WithRuntime::new(self.get_handle, async move {
             println!("[{}] Hello from plugin!", self.id);
             // internal code of reqwest just crashes
             let body = reqwest::get("https://api.ipify.org")
