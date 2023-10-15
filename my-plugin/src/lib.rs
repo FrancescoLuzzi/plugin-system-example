@@ -1,7 +1,5 @@
 use async_trait::async_trait;
-use my_interface::SayHelloService;
-use std::thread::sleep;
-use std::time::Duration;
+use my_interface::{SayHelloService, WithRuntime};
 use tokio::{self, runtime::Handle};
 
 #[no_mangle]
@@ -22,37 +20,22 @@ impl PluginSayHello {
     }
 }
 
-// #[async_trait]
-// impl SayHelloService for PluginSayHello {
-//     // this errors with "future cannot be sent between threads safely"
-//     async fn say_hello(&self) {
-//         // this should enable you to call tokio::sleep but EnterGuard is not Send :(
-//         // https://docs.rs/tokio/latest/tokio/runtime/struct.Handle.html#method.enter
-//         let _guard = self.handle.enter();
-//         println!("[{}] Hello from plugin!", self.id);
-//         let _ = tokio::spawn(async move {
-//             let _ = tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-//             println!("sleep 1");
-//         })
-//         .await;
-//     }
-// }
-
+/// https://stackoverflow.com/questions/77294605/library-plugin-manager-in-rust-is-it-even-doable-right-now#comment136267977_77295025
 #[async_trait]
 impl SayHelloService for PluginSayHello {
     async fn say_hello(&self) {
-        let id = self.id.clone();
-        let _ = self
-            .handle
-            .spawn_blocking(move || {
-                println!("[{}] Hello from plugin!", id);
-                // calling tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                // errors with "there is no reactor running, must be called from the context of a Tokio 1.x runtime"
-                let _ = sleep(Duration::new(1, 0));
-                println!("slept 1");
-                println!("[{}] Hello again from plugin!", id);
-            })
-            .await;
+        WithRuntime::new(self.handle.clone(), async move {
+            println!("[{}] Hello from plugin!", self.id);
+            // internal code of reqwest just crashes
+            let body = reqwest::get("https://api.ipify.org")
+                .await
+                .unwrap()
+                .text()
+                .await
+                .unwrap();
+            println!("body = {:?}", body);
+        })
+        .await;
     }
 }
 

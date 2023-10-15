@@ -11,6 +11,7 @@ my-interface = { path = "../my-interface", version = "*" }
 rand = "*"
 async-trait = "0"
 tokio = { version= "1", features = ["rt","time"]}
+reqwest = "0.11"
 
 [lib]
 name = "my_plugin"
