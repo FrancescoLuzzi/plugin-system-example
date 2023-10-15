@@ -6,9 +6,11 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use tokio::runtime::Handle;
 
+/// pass handle to the call, since depending on th runtime using a single static handle could besuboptimal
+/// https://stackoverflow.com/questions/77294605/library-plugin-manager-in-rust-is-it-even-doable-right-now#comment136267977_77295025
 #[async_trait]
 pub trait SayHelloService {
-    async fn say_hello(&self);
+    async fn say_hello(&self, handle: Handle);
 }
 
 pin_project! {
@@ -19,7 +21,6 @@ pin_project! {
     }
 }
 
-/// https://stackoverflow.com/questions/77294605/library-plugin-manager-in-rust-is-it-even-doable-right-now#comment136267977_77295025
 impl<F> WithRuntime<F> {
     pub fn new(runtime: Handle, fut: F) -> Self {
         Self { runtime, fut }
